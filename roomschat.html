@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>Анонимный чат</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="js/bootstrap.js"></script>
+	
+	
+    <!-- Attach our CSS -->
+    <link rel="stylesheet" href="reveal.css">	
+
+    <!-- Attach necessary scripts -->
+    <!-- <script type="text/javascript" src="jquery-1.4.4.min.js"></script> -->
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.min.js"></script>
+    <script type="text/javascript" src="jquery.reveal.js"></script>
+    <script src="js/jquery.emotions.js"></script>
+    <script src="js/jquery.cookie.js"></script>
+
+
+
+    <style>
+      #chat_text_field1 /* Стили для текстового поля */
+      {
+	overflow:auto; /* Отображается полоса прокрутки, когда высота контента > высоты текстового поля */
+	border:1px solid #999;
+	-webkit-border-radius: 5px 5px 5px 5px;
+	-moz-border-radius: 5px 5px 5px 5px;
+	border-radius: 5px 5px 5px 5px;
+	padding:3px;
+	background-color:#CCC;
+	width:800px;
+	margin-left:80px;
+      }
+
+      #chat_text_field2 /* Стили для текстового поля */
+      {
+	position: relative; top:-408px; left:900px; 
+	overflow:auto; /* Отображается полоса прокрутки, когда высота контента > высоты текстового поля */
+	border:1px solid #999;
+	-webkit-border-radius: 5px 5px 5px 5px;
+	-moz-border-radius: 5px 5px 5px 5px;
+	border-radius: 5px 5px 5px 5px;
+	padding:3px;
+	background-color:#CCC;
+	width:200px;
+	margin-left:20px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <script src="http://localhost:8080/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+      var messagesElement = null;
+
+      function addMessage(username, message) {
+	var newMessageElement = document.createElement('div');
+	var newMessageText = document.createTextNode(message);
+	newMessageText = $(newMessageElement).html('<b>'+username + ':</b> ' + message + '<br>').emotions();
+	$(messagesElement).append(newMessageElement);
+      }
+
+      function switchRoom(room) {
+	socket.emit('switchRoom', room);
+      }
+
+      var socket = io.connect('http://localhost:8080');
+
+      socket.on('connect', function () {
+	var room = $.cookie('room');
+    
+	if (room) {
+	  socket.emit('adduser', prompt("What's your name?"), room);
+	  socket.emit('userlist');
+	} else {
+	  document.location.href = "/rooms.html"
+	}
+      });
+
+
+      socket.on('userlist', function (users) {
+	  console.log(users);
+	  $('#chat_text_field2').html(users.join("<br>"));
+      });
+
+      socket.on('updatechat', function(username, content) {
+	  addMessage(username, content);
+      });
+
+      socket.on('disconnect', function(username, content) {
+	addMessage(username, content);
+      });
+$(function(){
+
+    messagesElement = document.getElementById('chat_text_field1');
+
+    $('#send_button').click(function(){
+      var inputElement = document.getElementById('appendedInputButtons');
+      socket.emit('sendchat', inputElement.value);
+      inputElement.value = '';
+    });
+
+    $('#cancel_button').live('click', function(){
+      socket.disconnect();
+      document.location.href = '/index.html';
+    });
+
+    $(window).bind("beforeunload", function() { 
+      socket.disconnect();       
+    });
+
+    $('#appendedInputButtons').live('keydown', function(event){
+      if (event.keyCode == 13) {
+	$('#send_button').trigger('click');   
+      }
+    });
+
+    $('img.emotions').live('click', function(){
+	var content = $('#appendedInputButtons').val();
+	var emotion = $(this).parent().data('emotion');
+	$('#appendedInputButtons').val(content + emotion);
+	return false;
+    });
+});
+</script>
+
+<table class="table table-condensed">
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Обсуждение нашего сайта</td>
+      <td><a class="btn"  href="rooms.html" style="margin-left:100px">Выйти</a></div></td>
+  </tr>
+</tbody>
+</table>
+
+
+
+<!--Текстовое поле чата 1-->
+<div id="chat_text_field1" style="height:400px;"></div>
+
+<!--Текстовое поле чата 2-->
+<div id="chat_text_field2" style="height:400px;">Мой Ник<br>чел1<br>чел2</div>
+
+<!--Модальное окно смайлов-->
+<div class="row" style="margin-top:-400px">
+  <div class="span12 offset1">
+    <a class="btn" href="#" class="big-link" data-reveal-id="myModal" data-animation="fade">Смайлы	</a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="input-append" style="margin-left:100px">
+    <input class="span12 offset1"   id="appendedInputButtons" type="text" style="height:35px">
+    <button class="btn btn-large btn-primary" type="button" id="send_button" style="margin-left:35px">Отправить</button>
+  </div>
+</div>
+
+
+<!--СМАЙЛЫ МОДАЛЬНОЕ ОКНО--> 
+<div id="myModal" class="reveal-modal">
+
+  <p>СМАЙЛЫ</p>
+  <p>
+  <a data-emotion='o:)'>
+    <img class='emotions' src='emotions-fb/angel.gif' />
+  </a>
+  <a data-emotion=':3'>
+    <img  class='emotions' src='emotions-fb/colonthree.gif' />
+  </a>
+  <a data-emotion='o.O'>
+    <img  class='emotions' src='emotions-fb/confused.gif' />
+  </a>
+  <a data-emotion=':O'>
+    <img  class='emotions' src='emotions-fb/gasp.gif' />
+  </a>
+  <a data-emotion=';)'>
+    <img  class='emotions' src='emotions-fb/wink.gif' />
+  </a>
+  <a data-emotion='3:)'>
+    <img  class='emotions' src='emotions-fb/devil.gif' />
+  </a>
+  <a data-emotion=':('>
+    <img  class='emotions' src='emotions-fb/frown.gif' />
+  </a>
+  <a data-emotion='8)'>
+    <img  class='emotions' src='emotions-fb/glasses.gif' />
+  </a>
+  <a data-emotion=':D'>
+    <img  class='emotions' src='emotions-fb/grin.gif' />
+  </a>
+  </p>
+  <p>
+  <a data-emotion='<3'>
+    <img  class='emotions' src='emotions-fb/heart.gif' />
+  </a>
+  <a data-emotion='^_^'>
+    <img  class='emotions' src='emotions-fb/kiki.gif' />
+  </a>
+  <a data-emotion=':*'>
+    <img  class='emotions' src='emotions-fb/kiss.gif' />
+  </a>
+  <a data-emotion=':v'>
+    <img  class='emotions' src='emotions-fb/pacman.gif' />
+  </a>
+  <a data-emotion=':)'>
+    <img  class='emotions' src='emotions-fb/smile.gif' />
+  </a>
+  <a data-emotion='-_-'>
+    <img  class='emotions' src='emotions-fb/squint.gif' />
+  </a>
+  <a data-emotion='8|'>
+    <img  class='emotions' src='emotions-fb/sunglasses.gif' />
+  </a>
+  <a data-emotion=':p'>
+    <img  class='emotions' src='emotions-fb/tongue.gif' />
+  </a>
+  <a data-emotion=':/'>
+    <img  class='emotions' src='emotions-fb/unsure.gif' />
+  </a>
+  </p>
+  <a class="close-reveal-modal">&#215;</a>
+</div>
+</body>
+</html>

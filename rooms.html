@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Заголовок сайта</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css"/>
+  </head>
+  <body>
+    <!--header-->
+    <div class="hero-unit">
+      Лого сайта
+    </div>
+    <!--endheader-->
+
+
+    <div class="row">
+      <div class="span3 offset6">
+	<h2>Чат комнаты <h2>
+
+	  </div>
+	  <div class="span3 offset5">
+	    <a class="btn" id="create-room" href="roomschatcreate.html">Создать комнату</a>
+	  </div>
+	  <!--endcontent-->
+
+	</div>
+
+
+
+	<table class="table table-condensed">
+	  <tbody id='rooms'>
+	  </tbody>
+	</table>
+
+
+	<ul class="pager">
+
+	  <li><a href="#">Еще</a></li>
+
+	</ul>
+
+
+	<script src="http://code.jquery.com/jquery-latest.js"></script>
+	<script src="js/bootstrap.js"></script>
+	<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+	<script src="js/jquery.cookie.js"></script>
+
+	<script>
+	  var socket = io.connect('http://127.0.0.1:8080');
+	  
+	  socket.on('listroom', function (rooms) {
+	    $('#rooms').empty();
+	    $.each(rooms, function(key, value) {
+	      $('#rooms').append('<tr><td>' + (key + 1) + '</td>' + '<td>' + value.caption + '</td>'+ '<td>' +  value.current_person_size + '</td>' + '<td><a class="btn enterable" data-caption="' + value.caption + '" href="roomschat.html">Войти</a></td>' + '</tr>');
+	    });
+	  });
+
+	  socket.on('canconnect', function (data) {
+	    console.log(data);
+	    if(data == true) {
+	      document.location.href = "/roomschat.html";
+	      }else {
+	     alert("Вы не можете войти в комнату, так в комнате может находится не более 30 человек"); 
+	   }
+	  });
+
+	  $(function () {
+	    setInterval(function () {
+	      socket.emit('listroom');
+	    }, 5000);
+
+	    socket.emit('listroom');
+
+	    $("#rooms").on("click", "a", function (e) {
+	      var caption = $(this).data('caption');
+	      $.cookie('room', caption);
+	      socket.emit('canconnect', caption);
+	      return false;
+	    });
+
+	    $("#create-room").click(function (e) {
+	      socket.emit('new-room', prompt("Введите название новой комнаты"));
+	      return false;
+	    });
+	  });
+	</script>
+      </body>
+    </html>
