@@ -50,6 +50,32 @@ io.sockets.on('connection', function(socket) {
     if(r_number != null) {
     socket.broadcast.to(r_number.substring(1)).emit('serverThemeMessage', "Аноним предложил " + content); }
   });
+  socket.on('clientWritingStart', function(){
+    var room = io.sockets.manager.roomClients[socket.id];
+    var r_number = null;
+    for (x in room)
+    {
+      if(x != '') {
+        r_number = x;
+      }
+    }
+    if(r_number != null) {
+      socket.broadcast.to(r_number.substring(1)).emit('serverWritingStart', "Аноним печатает"); 
+    }
+  });
+  socket.on('clientWritingEnd', function(){
+    var room = io.sockets.manager.roomClients[socket.id];
+    var r_number = null;
+    for (x in room)
+    {
+      if(x != '') {
+        r_number = x;
+      }
+    }
+    if(r_number != null) {
+      socket.broadcast.to(r_number.substring(1)).emit('serverWritingEnd'); 
+    }
+  });
   socket.on('login', function(){
     socket.join('waiting');
     client_size = io.sockets.clients('waiting');
