@@ -101,6 +101,8 @@ $(function(){
       inputElement.value = '';
     });
 
+    $('#theme').text($.cookie('room'));
+
     $('#cancel_button').live('click', function(){
       socket.disconnect();
       document.location.href = '/index.html';
@@ -129,7 +131,7 @@ $(function(){
   <tbody>
     <tr>
       <td>1</td>
-      <td>Обсуждение нашего сайта</td>
+      <td id="theme">Обсуждение нашего сайта</td>
       <td><a class="btn"  href="rooms.html" style="margin-left:100px">Выйти</a></div></td>
   </tr>
 </tbody>
@@ -141,7 +143,7 @@ $(function(){
 <div id="chat_text_field1" style="height:400px;"></div>
 
 <!--Текстовое поле чата 2-->
-<div id="chat_text_field2" style="height:400px;">Мой Ник<br>чел1<br>чел2</div>
+<div id="chat_text_field2" style="height:400px;"></div>
 
 <!--Модальное окно смайлов-->
 <div class="row" style="margin-top:-400px">
