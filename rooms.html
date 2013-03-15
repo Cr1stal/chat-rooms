@@ -42,11 +42,11 @@
 
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
 	<script src="js/bootstrap.js"></script>
-	<script src="http://localhost:8080/socket.io/socket.io.js"></script>
+	<script src="http://62.76.176.169:8080/socket.io/socket.io.js"></script>
 	<script src="js/jquery.cookie.js"></script>
 
 	<script>
-	  var socket = io.connect('http://127.0.0.1:8080');
+	  var socket = io.connect('http://62.76.176.169:8080');
 	  
 	  socket.on('listroom', function (rooms) {
 	    $('#rooms').empty();
