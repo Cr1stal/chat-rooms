@@ -50,7 +50,8 @@
 	  
 	  socket.on('listroom', function (rooms) {
 	    $('#rooms').empty();
-	    $.each(rooms, function(key, value) {
+	    var reverse_rooms = rooms.slice().reverse();
+	    $.each(reverse_rooms, function(key, value) {
 	      $('#rooms').append('<tr><td>' + (key + 1) + '</td>' + '<td>' + value.caption + '</td>'+ '<td>' +  value.current_person_size + '</td>' + '<td><a class="btn enterable" data-caption="' + value.caption + '" href="roomschat.html">Войти</a></td>' + '</tr>');
 	    });
 	  });
