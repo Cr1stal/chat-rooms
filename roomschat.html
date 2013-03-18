@@ -56,7 +56,7 @@
     </style>
   </head>
   <body>
-    <script src="http://localhost:8080/socket.io/socket.io.js"></script>
+    <script src="http://62.76.176.169:8080/socket.io/socket.io.js"></script>
     <script type="text/javascript">
       var messagesElement = null;
 
@@ -71,7 +71,7 @@
 	socket.emit('switchRoom', room);
       }
 
-      var socket = io.connect('http://localhost:8080');
+      var socket = io.connect('http://62.76.176.169:8080');
 
       socket.on('connect', function () {
 	var room = $.cookie('room');
