@@ -20,6 +20,12 @@
 
 
     <style>
+      .admin {
+	color: red;
+      }
+      .adminnable {
+	display: none;
+      }
       #chat_text_field1 /* Стили для текстового поля */
       {
 	overflow:auto; /* Отображается полоса прокрутки, когда высота контента > высоты текстового поля */
@@ -50,7 +56,7 @@
     </style>
   </head>
   <body>
-    <script src="http://62.76.176.169:8080/socket.io/socket.io.js"></script>
+    <script src="http://localhost:8080/socket.io/socket.io.js"></script>
     <script type="text/javascript">
       var messagesElement = null;
 
@@ -65,23 +71,46 @@
 	socket.emit('switchRoom', room);
       }
 
-      var socket = io.connect('http://62.76.176.169:8080');
+      var socket = io.connect('http://localhost:8080');
 
       socket.on('connect', function () {
 	var room = $.cookie('room');
     
 	if (room) {
-	  socket.emit('adduser', prompt("What's your name?"), room);
-	  socket.emit('userlist');
+	  var username = "";
+	  var password = "";
+	  username = prompt("Введи ваш ник");
+	  if (username == "dansing") {
+	    password = prompt("Введите пароль");
+	    socket.emit('adduser', username, password, room);
+	  } else {
+	    socket.emit('adduser', username, password, room);
+	    socket.emit('userlist');
+	  }
 	} else {
-	  document.location.href = "/rooms.html"
+	  document.location.href = "/rooms.html";
 	}
       });
 
+      socket.on('admin', function (flag) {
+	if (flag == true) {
+	  socket.emit('userlist');
+	  $('#delete-room').show();
+	} else {
+	  document.location.href = "/rooms.html";
+	}
+      });
 
       socket.on('userlist', function (users) {
-	  console.log(users);
-	  $('#chat_text_field2').html(users.join("<br>"));
+	var us = "";
+	$.each(users, function (key, value) {
+	  if (value == "dansing") {
+	    us += '<div class="admin">' + value + "</div>";
+	  } else {
+	    us += "<div>" + value + "</div>";
+	  }
+	});
+	$('#chat_text_field2').html(us);
       });
 
       socket.on('updatechat', function(username, content) {
@@ -103,9 +132,14 @@ $(function(){
 
     $('#theme').text($.cookie('room'));
 
-    $('#cancel_button').live('click', function(){
+    $('#cancel_button').live('click', function() {
       socket.disconnect();
       document.location.href = '/index.html';
+    });
+    
+    $('#delete-room').live('click', function() {
+      socket.emit('deleteroom', $.cookie('room'));
+      document.location.href = '/rooms.html';
     });
 
     $(window).bind("beforeunload", function() { 
@@ -156,6 +190,7 @@ $(function(){
   <div class="input-append" style="margin-left:100px">
     <input class="span12 offset1"   id="appendedInputButtons" type="text" style="height:35px">
     <button class="btn btn-large btn-primary" type="button" id="send_button" style="margin-left:35px">Отправить</button>
+    <button class="btn btn-large btn-primary adminnable" type="button" id="delete-room" style="margin-left:35px">Удалить комнату</button>
   </div>
 </div>
 

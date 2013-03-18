@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "dependenies": {
     "express": "2.4.6",
-    "socket.io": "0.9.x"
+    "socket.io": "0.9.x",
+    "redis": "0.8.x"
   },
   "engines": {
     "node": "0.8.x",

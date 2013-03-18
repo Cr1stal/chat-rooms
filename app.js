@@ -1,6 +1,9 @@
 var httpd = require('http').createServer(handler);
 var io = require('socket.io').listen(httpd);
 var fs = require('fs');
+var redis = require('redis'),
+    client = redis.createClient();
+
 var room_number = 1;
 var port = process.env.PORT | 8080;
 httpd.listen(port);
@@ -17,6 +20,10 @@ function handler(req, res) {
       });
 }
 
+client.on("error", function (err) {
+  console.log("Error " + err);
+});
+
 // usernames which are currently connected to the chat
 var usernames = {};
 
@@ -31,7 +38,7 @@ function room (caption, current_person_size, max_person_size) {
   this.current_person_size = typeof current_person_size !== 'undefined' ? current_person_size : 0;
   this.max_person_size = typeof max_person_size !== 'undefined' ? max_person_size : 30;
   this.usernames = [];
-
+  
   this.changeCaption = changeCaption;
   function changeCaption (caption) {
     this.caption = caption;
@@ -55,6 +62,7 @@ function room (caption, current_person_size, max_person_size) {
   this.addUsername = addUsername;
   function addUsername (username) {
     this.usernames.push(username);
+
   }
 
   this.deleteUsername = deleteUsername;
@@ -73,18 +81,36 @@ var rooms = [room1, room2, room3];
 io.sockets.on('connection', function (socket) {
 
   socket.on('listroom', function () {
-    socket.emit('listroom', rooms);
+      socket.emit('listroom', rooms);
   });
 
   socket.on('new-room', function (caption) {
     rooms.push(new room(caption));
   });
 
+  socket.on('deleteroom', function (caption) {
+    for (var i = 0; i < rooms.length; i++) {
+      if (rooms[i].caption == caption) {
+	rooms.remove(i);
+	break;
+      }
+    }
+  });
+
   socket.on('userlist', function () {
     socket.emit('userlist', socket.room.usernames);
   });
 
-  socket.on('canconnect', function (room_caption) {
+  socket.on('adminlogin', function (password, room_caption) {
+    if (password == "123321") {
+      socket.username = "dansing";
+      socket.emit('admin', true);
+    } else {
+      socket.emit('admin', false);
+    }
+  });
+
+  socket.on('canconnect', function (room_caption, username) {
     var roomd = new room("default");
     for (var i = 0; i < rooms.length; i++) {
       if (rooms[i].caption == room_caption) {
@@ -92,33 +118,38 @@ io.sockets.on('connection', function (socket) {
 	break;
       } 
     }
-    socket.emit('canconnect', roomd.current_person_size < roomd.max_person_size);
+    if (username == "dansing") {
+      socket.emit('canconnect', true);
+    } else {
+      socket.emit('canconnect', roomd.current_person_size < roomd.max_person_size);
+    }
   });
 
   // when the client emits 'adduser', this listens and executes
-  socket.on('adduser', function(username, room_caption){
-    // store the username in the socket session for this client
-    socket.username = username;
-    // store the room name in the socket session for this client
-    var roomd = new room("default");
-    for (var i = 0; i < rooms.length; i++) {
-      if (rooms[i].caption == room_caption) {
-	roomd = rooms[i];
-	break;
-      } 
+  socket.on('adduser', function(username, password, room_caption){
+    if (username == "dansing" && password != "123321") {
+      socket.emit('admin', false, room_caption);
+    } else {
+      socket.username = username;
+      var roomd = new room("default");
+      for (var i = 0; i < rooms.length; i++) {
+	if (rooms[i].caption == room_caption) {
+	  roomd = rooms[i];
+	  break;
+	} 
+      }
+      socket.room = roomd;
+      socket.room.incrementPersonCount();
+      socket.room.addUsername(username);
+      usernames[username] = username;
+      socket.join(socket.room.caption);
+      socket.emit('updatechat', 'SERVER', 'вы присоединились к комнате ' + socket.room.caption);
+      socket.broadcast.to(socket.room.caption).emit('updatechat', 'SERVER', username + ' присоединился к этой комнате');
+      io.sockets.in(socket.room.caption).emit('userlist', socket.room.usernames);
+      if (username == "dansing") {
+	socket.emit('admin', true, room_caption);
+      }
     }
-    socket.room = roomd;
-    socket.room.incrementPersonCount();
-    socket.room.addUsername(username);
-    // add the client's username to the global list
-    usernames[username] = username;
-    // send client to room 1
-    socket.join(socket.room.caption);
-    // echo to client they've connected
-    socket.emit('updatechat', 'SERVER', 'вы присоединились к комнате ' + socket.room.caption);
-    // echo to room 1 that a person has connected to their room
-    socket.broadcast.to(socket.room.caption).emit('updatechat', 'SERVER', username + ' присоединился к этой комнате');
-    io.sockets.in(socket.room.caption).emit('userlist', socket.room.usernames);
   });
 
   // when the client emits 'sendchat', this listens and executes
