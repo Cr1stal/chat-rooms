@@ -74,15 +74,7 @@
 	    $("#rooms").on("click", "a", function (e) {
 	      var caption = $(this).data('caption');
 	      $.cookie('room', caption);
-	      var password = "";
-	      if (username == "") {
-		username = prompt("Пожалуйста введите свой ник");
-		if (username == "dansing") {
-		  $.cookie('username', username);
-		  password = prompt("Пожалуйста введите пароль");
-		}
-	      }
-	      socket.emit('canconnect', caption, username, password);
+	      socket.emit('canconnect', caption);
 	      return false;
 	    });
 

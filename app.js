@@ -110,7 +110,7 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
-  socket.on('canconnect', function (room_caption, username) {
+  socket.on('canconnect', function (room_caption) {
     var roomd = new room("default");
     for (var i = 0; i < rooms.length; i++) {
       if (rooms[i].caption == room_caption) {
@@ -118,11 +118,7 @@ io.sockets.on('connection', function (socket) {
 	break;
       } 
     }
-    if (username == "dansing") {
-      socket.emit('canconnect', true);
-    } else {
-      socket.emit('canconnect', roomd.current_person_size < roomd.max_person_size);
-    }
+    socket.emit('canconnect', roomd.current_person_size < roomd.max_person_size);
   });
 
   // when the client emits 'adduser', this listens and executes
